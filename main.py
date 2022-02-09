@@ -15,7 +15,7 @@ def convert_cardboard_to_pano(args):
     width = im.size[0]
     height = im.size[1]
     target_height = round(width / 2)
-    vertical_center = round(target_height / 2)
+    vertical_center = round(target_height / 2) + int(args.vertical_offset)
     # this is the vertical position to paste the cardboard image exactly in the middle of the PANO
     vertical_paste_position = round(vertical_center - (height/2))
 
@@ -40,6 +40,11 @@ def convert_cardboard_to_pano(args):
 
     if args.target_dir:
         # a target_dir is given, store the file there
+
+        # create it if it does not exist
+        if not os.path.exists(args.target_dir):
+            os.makedirs(args.target_dir)
+
         target_file = os.path.join(args.target_dir,target_filename)
     else:
         target_file = os.path.join(source_dir, target_filename)
@@ -51,9 +56,7 @@ def convert_cardboard_to_pano(args):
     #if not os.path.exists(target_file):
         # save the new file
     im_target.save(target_file)
-    im_target.show()
-
-
+    #im_target.show()
 
     print('ok')
 
@@ -64,8 +67,21 @@ def do_conversion(args):
 
     # read all files in the directory and convert them
     if args.source_dir:
-        pass
+        for dirpath, dirnames, filenames in os.walk(args.source_dir, followlinks=True):
 
+            for filename in filenames:
+                try:
+                    path_to_file = os.path.join(dirpath, filename)
+                    args.source_file = path_to_file
+
+                    convert_cardboard_to_pano(args)
+                except:
+                    print('ERROR: failed conversion for '+filename)
+
+
+# examples:
+# CardToPano --source_file=d:\temp\cardboard.jpg --target_dir=\\yggdrasil\photo\panorama\CardboardToPano
+# CardToPano --source_dir=d:\temp\cardboard.jpg --target_dir=\\yggdrasil\photo\panorama\CardboardToPano
 
 def main():
     parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
@@ -81,6 +97,9 @@ def main():
     parser.add_argument("--color",
                         default="#C0C0C0",
                         help="Color for the top and bottom bar fill. RGB color in hex format")
+    parser.add_argument("--vertical_offset",
+                        default=0,
+                        help="Move the cardboard image up or down the center line by a number of pixels (negative is up, positive is down)")
     args = args = parser.parse_args()
 
     print("--- CardToPano (version 9 feb 2022) ---")
@@ -91,4 +110,4 @@ def main():
 if __name__ == '__main__':
     main()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
